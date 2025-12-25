@@ -1,6 +1,5 @@
 import { Schema } from 'mongoose';
 import { MemberType, MemberStatus, MemberAuthType } from '../libs/enums/member.enum';
-import { timestamp } from 'rxjs';
 
 const memberSchema = new Schema(
 	{
