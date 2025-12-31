@@ -3,6 +3,9 @@ import { MemberAuthType, MemberStatus, MemberType } from '../../enums/member.enu
 
 @ObjectType()
 export class Member {
+	@Field(() => String, { nullable: true })
+	_id: string;
+
 	@Field(() => MemberType)
 	memberType: MemberType;
 

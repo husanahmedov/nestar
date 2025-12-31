@@ -45,6 +45,7 @@ export class MemberService {
 			if (!isMatch) {
 				throw new InternalServerErrorException(Message.WRONG_PASSWORD);
 			}
+			member.accessToken = await this.authService.createToken(member);
 			return member;
 		} catch (error) {
 			console.error('Error in login service:', error);
