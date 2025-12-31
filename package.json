@@ -7,7 +7,7 @@
 	"license": "ITC",
 	"scripts": {
 		"build": "nest build",
-		"format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
+		"format": "prettier --write \"apps/**/*.ts\" \"apps/nestar/src/libs/**/*.ts\"",
 		"start": "nest start",
 		"start:dev": "NODE_ENV=development nest start --watch",
 		"start:dev:batch": "NODE_ENV=development nest start nestar-batch --watch",
