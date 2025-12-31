@@ -12,7 +12,7 @@ export enum Message {
 	UPLOAD_FAILED = 'Failed to upload the file.',
 	BAD_REQUEST = 'Bad request. Please check the data you have provided.',
 
-	NO_MEMBER_NICK = 'No member nickname provided.',
+	NO_MEMBER_NICK = 'No member nickname found.',
 	BLOCKED_USER = 'The member is blocked.',
 	WRONG_PASSWORD = 'The password you entered is incorrect.',
 	NOT_AUTHENTICATED = 'You are not authenticated. Please log in to continue.',
