@@ -8,6 +8,9 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'bson';
 import { shapeIntoMongoObjectId } from '../../libs/config';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { MemberType } from '../../libs/enums/member.enum';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Resolver()
 export class MemberResolver {
@@ -47,6 +50,23 @@ export class MemberResolver {
 	public async checkAuth(@AuthMember('memberNick') memberNick: string): Promise<string> {
 		console.log('CheckAuth mutation called for memberNick:', memberNick);
 		return `Hi ${memberNick}, you are authenticated!`;
+	}
+
+	@Roles(MemberType.AGENT, MemberType.USER)
+	@UseGuards(RolesGuard)
+	@UseGuards(AuthGuard)
+	@Mutation(() => String)
+	public async checkRoleAuth(@AuthMember('memberNick') memberNick: string): Promise<string> {
+		console.log('CheckRoleAuth mutation called for memberNick:', memberNick);
+		return `Hi ${memberNick}, you have the required role!`;
+	}
+
+	@Roles(MemberType.ADMIN)
+	@UseGuards(RolesGuard)
+	@Mutation(() => String)
+	public async getAllMembersByAdmin(): Promise<string> {
+		console.log('GetAllMembersByAdmin mutation called');
+		return this.memberService.getAllMembersByAdmin();
 	}
 
 	@Query(() => String)
