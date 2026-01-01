@@ -6,11 +6,12 @@ import { LoginInput, MemberInput } from '../../libs/dto/member/member.input';
 import { Member } from '../../libs/dto/member/member';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
-import { ObjectId } from 'bson';
+import type { ObjectId } from 'mongoose';
 import { shapeIntoMongoObjectId } from '../../libs/config';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { MemberUpdate } from '../../libs/dto/member/member.update';
 
 @Resolver()
 export class MemberResolver {
@@ -39,10 +40,14 @@ export class MemberResolver {
 	}
 
 	@UseGuards(AuthGuard)
-	@Mutation(() => String)
-	public async updateMember(@AuthMember('_id') memberId: ObjectId): Promise<string> {
+	@Mutation(() => Member)
+	public async updateMember(
+		@Args('input') input: MemberUpdate,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Member> {
 		console.log('UpdateMember mutation called');
-		return this.memberService.updateMember();
+		delete (input as any)._id; // Remove _id from input to prevent overwriting
+		return this.memberService.updateMember(memberId, input);
 	}
 
 	@UseGuards(AuthGuard)
