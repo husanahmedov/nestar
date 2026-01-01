@@ -12,6 +12,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { MemberUpdate } from '../../libs/dto/member/member.update';
+import { WithoutGuard } from '../auth/guards/without.guard';
 
 @Resolver()
 export class MemberResolver {
@@ -74,12 +75,14 @@ export class MemberResolver {
 		return this.memberService.getAllMembersByAdmin();
 	}
 
+	@UseGuards(WithoutGuard)
 	@Query(() => Member)
-	public async getMember(@Args('memberId') input: string): Promise<Member> {
+	public async getMember(@Args('memberId') input: string, @AuthMember('_id') memberId: ObjectId): Promise<Member> {
 		try {
 			console.log('GetMember query called');
+			console.log('Member Id---: ', memberId);
 			const targetId = shapeIntoMongoObjectId(input);
-			return this.memberService.getMember(targetId);
+			return this.memberService.getMember(memberId, targetId);
 		} catch (error) {
 			console.error('Error in getMember query:', error);
 			throw new InternalServerErrorException(error);
