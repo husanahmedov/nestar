@@ -61,9 +61,9 @@ export class MemberResolver {
 	@UseGuards(RolesGuard)
 	@UseGuards(AuthGuard)
 	@Mutation(() => String)
-	public async checkRoleAuth(@AuthMember('memberNick') memberNick: string): Promise<string> {
-		console.log('CheckRoleAuth mutation called for memberNick:', memberNick);
-		return `Hi ${memberNick}, you have the required role!`;
+	public async checkRoleAuth(@AuthMember() member: Member): Promise<string> {
+		console.log('CheckRoleAuth mutation called for memberNick:', member.memberNick);
+		return `Hi ${member.memberNick}, you have the required role! ID is ${member._id}`;
 	}
 
 	@Roles(MemberType.ADMIN)
@@ -74,11 +74,12 @@ export class MemberResolver {
 		return this.memberService.getAllMembersByAdmin();
 	}
 
-	@Query(() => String)
-	public async getMember(): Promise<string> {
+	@Query(() => Member)
+	public async getMember(@Args('memberId') input: string): Promise<Member> {
 		try {
 			console.log('GetMember query called');
-			return this.memberService.getMember();
+			const targetId = shapeIntoMongoObjectId(input);
+			return this.memberService.getMember(targetId);
 		} catch (error) {
 			console.error('Error in getMember query:', error);
 			throw new InternalServerErrorException(error);
