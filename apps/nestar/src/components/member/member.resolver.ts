@@ -10,11 +10,9 @@ export class MemberResolver {
 	constructor(private readonly memberService: MemberService) {}
 
 	@Mutation(() => Member)
-	@UsePipes(ValidationPipe)
-	public async signUp(@Args('input') input: MemberInput): Promise<Member> {
+	public async signup(@Args('input') input: MemberInput): Promise<Member> {
 		try {
 			console.log('SignUp mutation called');
-			console.log('Input:', input);
 			return this.memberService.signUp(input);
 		} catch (error) {
 			console.error('Error in signUp mutation:', error);
@@ -23,7 +21,6 @@ export class MemberResolver {
 	}
 
 	@Mutation(() => Member)
-	@UsePipes(ValidationPipe)
 	public async login(@Args('input') input: LoginInput): Promise<Member> {
 		try {
 			console.log('Login mutation called');

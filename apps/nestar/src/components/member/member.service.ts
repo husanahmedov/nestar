@@ -29,7 +29,6 @@ export class MemberService {
 				})
 				.select('+memberPassword')
 				.exec();
-			console.log("Member", member)
 			if (!member || member.memberStatus === MemberStatus.DELETE) {
 				throw new InternalServerErrorException(Message.NO_MEMBER_NICK);
 			} else if (member.memberStatus === MemberStatus.BLOCK) {
