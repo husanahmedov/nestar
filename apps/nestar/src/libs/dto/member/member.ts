@@ -3,6 +3,9 @@ import { MemberAuthType, MemberStatus, MemberType } from '../../enums/member.enu
 
 @ObjectType()
 export class Member {
+	@Field(() => String, { nullable: true })
+	_id: string;
+
 	@Field(() => MemberType)
 	memberType: MemberType;
 
@@ -73,4 +76,7 @@ export class Member {
 
 	@Field(() => Date)
 	updatedAt: Date;
+
+	@Field(() => String, { nullable: true })
+	accessToken?: string;
 }
