@@ -1,3 +1,5 @@
+import { registerEnumType } from '@nestjs/graphql';
+
 export enum Message {
 	SOMETHING_WENT_WRONG = 'Something went wrong. Please try again later.',
 	INVALID_CREDENTIALS = 'Invalid credentials. Please check your username and password.',
@@ -12,7 +14,7 @@ export enum Message {
 	UPLOAD_FAILED = 'Failed to upload the file.',
 	BAD_REQUEST = 'Bad request. Please check the data you have provided.',
 
-	NO_MEMBER_NICK = 'No member nickname provided.',
+	NO_MEMBER_NICK = 'No member nickname found.',
 	BLOCKED_USER = 'The member is blocked.',
 	WRONG_PASSWORD = 'The password you entered is incorrect.',
 	NOT_AUTHENTICATED = 'You are not authenticated. Please log in to continue.',
@@ -22,3 +24,11 @@ export enum Message {
 	PROVIDE_ALLOWED_FORMAT = 'Please provide only jpg, jpeg, png formats.',
 	SELF_SUBSCRIPTION_DENIED = 'You cannot subscribe to yourself.',
 }
+
+export enum Direction {
+	ASC = 1,
+	DESC = -1,
+}
+registerEnumType(Direction, {
+	name: 'Direction',
+});
