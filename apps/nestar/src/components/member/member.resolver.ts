@@ -2,8 +2,8 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { MemberService } from './member.service';
 
 import { InternalServerErrorException, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
-import { LoginInput, MemberInput } from '../../libs/dto/member/member.input';
-import { Member } from '../../libs/dto/member/member';
+import { AgentsInquiry, LoginInput, MemberInput } from '../../libs/dto/member/member.input';
+import { Member, Members } from '../../libs/dto/member/member';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import type { ObjectId } from 'mongoose';
@@ -65,6 +65,13 @@ export class MemberResolver {
 	public async checkRoleAuth(@AuthMember() member: Member): Promise<string> {
 		console.log('CheckRoleAuth mutation called for memberNick:', member.memberNick);
 		return `Hi ${member.memberNick}, you have the required role! ID is ${member._id}`;
+	}
+
+	@UseGuards(WithoutGuard)
+	@Query(() => Members)
+	public async getAgents(@Args('input') input: AgentsInquiry, @AuthMember('_id') memberId: ObjectId): Promise<Members> {
+		console.log('GetAgents query called');
+		return this.memberService.getAgents(memberId, input);
 	}
 
 	@Roles(MemberType.ADMIN)
