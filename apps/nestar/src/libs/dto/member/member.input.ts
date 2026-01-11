@@ -85,9 +85,9 @@ export class AgentsInquiry {
 	@Field(() => Direction, { nullable: true })
 	direction?: Direction;
 
-	@IsNotEmpty()
+	@IsOptional()
 	@Field(() => AISearch)
-	search: AISearch;
+	search?: AISearch;
 }
 
 @InputType()
