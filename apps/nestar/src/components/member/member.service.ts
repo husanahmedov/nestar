@@ -11,6 +11,7 @@ import { T } from '../../libs/types/common';
 import { ViewService } from '../view/view.service';
 import { ViewInput } from '../../libs/dto/view/view.input';
 import { ViewGroup } from '../../libs/enums/view.enum';
+import { StatisticModifier } from '../../libs/types/common';
 
 @Injectable()
 export class MemberService {
@@ -104,7 +105,7 @@ export class MemberService {
 	}
 
 	public async getAgents(memberId: ObjectId, input: AgentsInquiry): Promise<Members> {
-		const { text  } = input.search ?? {};
+		const { text } = input.search ?? {};
 		const match: T = { memberType: MemberType.AGENT, memberStatus: MemberStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
 		if (text) match.memberNick = { $regex: new RegExp(text, 'i') };
@@ -169,5 +170,17 @@ export class MemberService {
 			throw new InternalServerErrorException(Message.UPDATE_FAILED);
 		}
 		return result;
+	}
+
+	public async memberStatsEditor(input: StatisticModifier): Promise<Member> {
+		try {
+			const { _id, targetKey, modifier } = input;
+			return (await this.memberModel
+				.findOneAndUpdate({ _id }, { $inc: { [targetKey]: modifier } }, { new: true })
+				.exec()) as Member;
+		}catch (error) {
+			console.error('Error in memberStatsEditor service:', error);
+			throw new BadRequestException(error);
+		}
 	}
 }
