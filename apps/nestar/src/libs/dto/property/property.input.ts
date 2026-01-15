@@ -14,7 +14,7 @@ import {
 import { PropertyLocation, PropertyStatus, PropertyType } from '../../enums/property.enum';
 import { Direction } from '../../enums/common.enum';
 import type { ObjectId } from 'mongoose';
-
+import { availableOptions } from '../../config';
 /** PROPERTY **/
 
 @InputType()
@@ -86,6 +86,33 @@ export class PropertyInput {
 /** SEARCH **/
 
 @InputType()
+export class PriceRange {
+	@Field(() => Int)
+	start: number;
+
+	@Field(() => Int)
+	end: number;
+}
+
+@InputType()
+export class PeriodsRange {
+	@Field(() => Date)
+	start: Date;
+
+	@Field(() => Date)
+	end: Date;
+}
+
+@InputType()
+export class SquaresRange {
+	@Field(() => Int)
+	start: number;
+
+	@Field(() => Int)
+	end: number;
+}
+
+@InputType()
 class PISearch {
 	@IsOptional()
 	@Field(() => String, { nullable: true })
@@ -112,16 +139,21 @@ class PISearch {
 	statusList?: PropertyStatus[];
 
 	@IsOptional()
-	@Field(() => Int, { nullable: true })
-	pricesRange?: number;
+	@Field(() => PriceRange, { nullable: true })
+	pricesRange?: PriceRange;
 
 	@IsOptional()
-	@Field(() => Int, { nullable: true })
-	periodsRange?: number;
+	@Field(() => PeriodsRange, { nullable: true })
+	periodsRange?: PeriodsRange;
 
 	@IsOptional()
-	@Field(() => Int, { nullable: true })
-	squaresRange?: number;
+	@Field(() => SquaresRange, { nullable: true })
+	squaresRange?: SquaresRange;
+
+	@IsOptional()
+	@IsIn(availableOptions, { each: true })
+	@Field(() => [String], { nullable: true })
+	options?: string[];
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })

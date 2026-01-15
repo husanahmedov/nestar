@@ -15,6 +15,8 @@ export enum PropertyStatus {
 	SOLD = 'SOLD',
 	DELETE = 'DELETE',
 }
+
+
 registerEnumType(PropertyStatus, {
 	name: 'PropertyStatus',
 });
