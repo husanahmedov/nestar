@@ -12,11 +12,11 @@ import MemberSchema from '../../schemas/Member.model';
 	imports: [
 		MongooseModule.forFeature([
 			{ name: 'Property', schema: PropertySchema },
-			{ name: 'Member', schema: MemberSchema },
 		]),
 		AuthModule,
 		ViewModule,
 		MemberModule,
+		ViewModule
 	],
 	providers: [PropertyService, PropertyResolver],
 })
