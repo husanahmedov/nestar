@@ -52,7 +52,7 @@ export class BoardArticleService {
 			articleStatus: BoardArticleStatus.ACTIVE,
 		};
 
-		const targetBoardArticle = await this.boardArticleModel.findOne(search).lean().exec();
+		const targetBoardArticle: BoardArticle | null = await this.boardArticleModel.findOne(search).lean().exec();
 		if (!targetBoardArticle) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		if (memberId) {
@@ -64,9 +64,14 @@ export class BoardArticleService {
 			}
 		}
 
-		// meLiked
-
-		targetBoardArticle.memberData = await this.memberService.getMember(null, targetBoardArticle.memberId);
+		const likeInput = {
+			memberId: memberId!,
+			likeRefId: articleId,
+			likeGroup: LikeGroup.ARTICLE,
+		};
+		targetBoardArticle.meLiked = await this.likeService.checkLikeExistence(likeInput);
+		
+		targetBoardArticle.memberData = await this.memberService.getMember(null, targetBoardArticle.memberId)
 		return targetBoardArticle;
 	}
 

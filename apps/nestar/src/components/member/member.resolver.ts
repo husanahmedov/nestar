@@ -93,15 +93,10 @@ export class MemberResolver {
 	@UseGuards(WithoutGuard)
 	@Query(() => Member)
 	public async getMember(@Args('memberId') input: string, @AuthMember('_id') memberId: ObjectId): Promise<Member> {
-		try {
-			console.log('GetMember query called');
-			console.log('Member Id---: ', memberId);
-			const targetId = shapeIntoMongoObjectId(input);
-			return this.memberService.getMember(memberId, targetId);
-		} catch (error) {
-			console.error('Error in getMember query:', error);
-			throw new InternalServerErrorException(error);
-		}
+		console.log('GetMember query called');
+		console.log('Member Id---: ', memberId);
+		const targetId = shapeIntoMongoObjectId(input);
+		return await this.memberService.getMember(memberId, targetId);
 	}
 
 	// ADMIN QUERIES
