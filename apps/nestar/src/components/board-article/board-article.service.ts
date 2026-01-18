@@ -70,8 +70,8 @@ export class BoardArticleService {
 			likeGroup: LikeGroup.ARTICLE,
 		};
 		targetBoardArticle.meLiked = await this.likeService.checkLikeExistence(likeInput);
-		
-		targetBoardArticle.memberData = await this.memberService.getMember(null, targetBoardArticle.memberId)
+
+		targetBoardArticle.memberData = await this.memberService.getMember(null, targetBoardArticle.memberId);
 		return targetBoardArticle;
 	}
 
