@@ -12,6 +12,9 @@ import { ViewService } from '../view/view.service';
 import { ViewInput } from '../../libs/dto/view/view.input';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { StatisticModifier } from '../../libs/types/common';
+import { LikeInput } from '../../libs/dto/like/like.input';
+import { LikeGroup } from '../../libs/enums/like.enum';
+import { LikeService } from '../like/like.service';
 
 @Injectable()
 export class MemberService {
@@ -19,6 +22,7 @@ export class MemberService {
 		@InjectModel('Member') private readonly memberModel: Model<Member>,
 		private readonly authService: AuthService,
 		private readonly viewService: ViewService,
+		private readonly likeService: LikeService,
 	) {}
 	// Business logic for member operations would go here
 	public async signUp(input: MemberInput): Promise<Member> {
@@ -129,6 +133,32 @@ export class MemberService {
 		return result[0];
 	}
 
+	public async likeTargetMember(memberId: ObjectId, likeRefId: ObjectId): Promise<Member> {
+		const target: Member | null = await this.memberModel
+			.findOne({ _id: likeRefId, memberStatus: MemberStatus.ACTIVE })
+			.exec();
+		if (!target) {
+			throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+		}
+		const input: LikeInput = {
+			memberId: memberId,
+			likeRefId: likeRefId,
+			likeGroup: LikeGroup.MEMBER,
+		};
+
+		const modifier: number = await this.likeService.toggleLike(input);
+
+		const result = await this.memberStatsEditor({
+			_id: likeRefId,
+			targetKey: 'memberLikes',
+			modifier: modifier,
+		});
+		if (!result) {
+			throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+		}
+		return result;
+	}
+
 	public async getAllMembersByAdmin(input: MembersInquiry): Promise<Members> {
 		const { text, memberType, memberStatus } = input.search;
 		const match: T = {};
@@ -178,7 +208,7 @@ export class MemberService {
 			return (await this.memberModel
 				.findOneAndUpdate({ _id }, { $inc: { [targetKey]: modifier } }, { new: true })
 				.exec()) as Member;
-		}catch (error) {
+		} catch (error) {
 			console.error('Error in memberStatsEditor service:', error);
 			throw new BadRequestException(error);
 		}
