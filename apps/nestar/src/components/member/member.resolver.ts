@@ -80,12 +80,12 @@ export class MemberResolver {
 	}
 
 	@UseGuards(AuthGuard)
-	@Query(() => Member)
+	@Mutation(() => Member)
 	public async likeTargetMember(
 		@Args('memberId') input: string,
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Member> {
-		console.log('LikeTargetMembers query called');
+		console.log('LikeTargetMembers mutation called');
 		const likeRefId = shapeIntoMongoObjectId(input);
 		return this.memberService.likeTargetMember(memberId, likeRefId);
 	}
