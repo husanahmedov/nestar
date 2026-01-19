@@ -2,6 +2,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import { ObjectId } from 'bson';
+import { pipeline } from 'stream';
 
 export const availableAgentSorts = ['createdAt', 'memberNick', 'memberLikes', 'memberViews', 'memberRank'];
 export const availableMemberSorts = ['createdAt', 'memberNick', 'memberLikes', 'memberViews'];
@@ -26,6 +27,40 @@ export const getSerialForImage = (filename: string) => {
 	const ext = path.parse(filename).ext;
 	return uuidv4() + ext;
 };
+
+export const lookupAuthMemberLiked = (memberId: ObjectId, targetRefId: string = '$_id') => {
+	return {
+		$lookup: {
+			from: 'likes',
+			let: {
+				localLikeRefId: targetRefId,
+				localMemberId: memberId,
+				localMyFavorite: true,
+			},
+			pipeline: [
+				{
+					$match: {
+						$expr: {
+							$and: [
+								{ $eq: ['$likeRefId', '$$localLikeRefId'] }, 
+								{ $eq: ['$memberId', '$$localMemberId'] }
+								],
+						},
+					},
+				},
+				{
+					$project: {
+						_id: 0,
+						memberId: 1,
+						likeRefId: 1,
+						myFavorite: "$$localMyFavorite",
+					},
+				},
+			],
+			as: 'meLiked',
+		},
+	};
+};	
 
 export const lookupMember = {
 	$lookup: {

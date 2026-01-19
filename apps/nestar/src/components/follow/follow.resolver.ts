@@ -12,6 +12,7 @@ import { FollowInquiry } from '../../libs/dto/follow/follow.input';
 @Resolver()
 export class FollowResolver {
 	constructor(private readonly followService: FollowService) {}
+	
 	@UseGuards(AuthGuard)
 	@Mutation(() => Follower)
 	public async subscribe(@Args('input') input: string, @AuthMember('_id') memberId: ObjectId): Promise<Follower> {

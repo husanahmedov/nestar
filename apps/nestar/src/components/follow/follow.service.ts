@@ -85,6 +85,7 @@ export class FollowService {
 				},
 			])
 			.exec();
+			console.log('result:', result[0]);
 
 		return result[0];
 	}
