@@ -16,6 +16,9 @@ import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 import { LikeService } from '../like/like.service';
 import { Follower, Following, MeFollowed } from '../../libs/dto/follow/follow';
+import { lookupAuthMemberLiked } from '../../libs/config';
+
+import { ObjectId as BsonObjectId } from 'bson';
 
 @Injectable()
 export class MemberService {
@@ -123,7 +126,7 @@ export class MemberService {
 		return result ? [{ followerId: followerId, followingId: followingId, myFollowing: true }] : [];
 	}
 
-	public async getAgents(memberId: ObjectId, input: AgentsInquiry): Promise<Members> {
+	public async getAgents(memberId: ObjectId | BsonObjectId, input: AgentsInquiry): Promise<Members> {
 		const { text } = input.search ?? {};
 		const match: T = { memberType: MemberType.AGENT, memberStatus: MemberStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
@@ -135,7 +138,11 @@ export class MemberService {
 				{ $sort: sort },
 				{
 					$facet: {
-						list: [{ $skip: ((input.page ?? 1) - 1) * (input.limit ?? 10) }, { $limit: input.limit ?? 10 }],
+						list: [
+							{ $skip: ((input.page ?? 1) - 1) * (input.limit ?? 10) },
+							{ $limit: input.limit ?? 10 },
+							lookupAuthMemberLiked(memberId as BsonObjectId),
+						],
 						metaCounter: [{ $count: 'total' }],
 					},
 				},

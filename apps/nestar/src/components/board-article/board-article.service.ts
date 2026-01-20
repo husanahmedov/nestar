@@ -5,6 +5,7 @@ import { BoardArticle, BoardArticles } from '../../libs/dto/board-article/board-
 import { MemberService } from '../member/member.service';
 import { ViewService } from '../view/view.service';
 import type { ObjectId } from 'mongoose';
+import { ObjectId as BsonObjectId } from 'bson';
 import {
 	AllBoardArticlesInquiry,
 	BoardArticleInput,
@@ -16,7 +17,7 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { BoardArticleUpdate } from '../../libs/dto/board-article/board-article.update';
 import { BoardArticleStatus } from '../../libs/enums/board-article.enum';
 import { ViewGroup } from '../../libs/enums/view.enum';
-import { lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
+import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 import { LikeService } from '../like/like.service';
@@ -88,7 +89,10 @@ export class BoardArticleService {
 		return result as BoardArticle;
 	}
 
-	public async getBoardArticles(memberId: ObjectId, input: BoardArticlesInquiry): Promise<BoardArticles> {
+	public async getBoardArticles(
+		memberId: ObjectId | BsonObjectId,
+		input: BoardArticlesInquiry,
+	): Promise<BoardArticles> {
 		const { articleCategory, text } = input.search;
 		const match: T = { articleStatus: BoardArticleStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
@@ -110,7 +114,7 @@ export class BoardArticleService {
 						list: [
 							{ $skip: (input.page - 1) * input.limit },
 							{ $limit: input.limit },
-							// meLiked
+							lookupAuthMemberLiked(memberId as BsonObjectId),
 							lookupMember,
 							{ $unwind: '$memberData' },
 						],
