@@ -9,6 +9,7 @@ import { AppResolver } from './app.resolver';
 import { ComponentsModule } from './components/components.module';
 import { DatabaseModule } from './database/database.module';
 import { T } from './libs/types/common';
+import { SocketModule } from './socket/socket.module';
 
 @Module({
 	imports: [
@@ -21,13 +22,14 @@ import { T } from './libs/types/common';
 			formatError: (error: T) => {
 				const graphQLFormattedError = {
 					code: error.extensions?.code,
-					message: error?.extensions?.exception?.message || error?.extensions?.response?.message || error.message,
+					message: error
 				};
 				return graphQLFormattedError;
 			},
 		}),
 		ComponentsModule,
 		DatabaseModule,
+		SocketModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],

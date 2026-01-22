@@ -7,12 +7,17 @@ import { Member, Members } from '../../libs/dto/member/member';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import type { ObjectId } from 'mongoose';
-import { shapeIntoMongoObjectId } from '../../libs/config';
+import { getSerialForImage, shapeIntoMongoObjectId, validMimeTypes } from '../../libs/config';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { MemberUpdate } from '../../libs/dto/member/member.update';
 import { WithoutGuard } from '../auth/guards/without.guard';
+
+import { GraphQLUpload, FileUpload } from 'graphql-upload';
+import { Message } from '../../libs/enums/common.enum';
+import { createWriteStream } from 'fs';
+import { mkdir } from 'fs/promises';
 
 @Resolver()
 export class MemberResolver {
@@ -74,19 +79,24 @@ export class MemberResolver {
 		return this.memberService.getAgents(memberId, input);
 	}
 
-	
+	@UseGuards(AuthGuard)
+	@Mutation(() => Member)
+	public async likeTargetMember(
+		@Args('memberId') input: string,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Member> {
+		console.log('LikeTargetMembers mutation called');
+		const likeRefId = shapeIntoMongoObjectId(input);
+		return this.memberService.likeTargetMember(memberId, likeRefId);
+	}
+
 	@UseGuards(WithoutGuard)
 	@Query(() => Member)
 	public async getMember(@Args('memberId') input: string, @AuthMember('_id') memberId: ObjectId): Promise<Member> {
-		try {
-			console.log('GetMember query called');
-			console.log('Member Id---: ', memberId);
-			const targetId = shapeIntoMongoObjectId(input);
-			return this.memberService.getMember(memberId, targetId);
-		} catch (error) {
-			console.error('Error in getMember query:', error);
-			throw new InternalServerErrorException(error);
-		}
+		console.log('GetMember query called');
+		console.log('Member Id---: ', memberId);
+		const targetId = shapeIntoMongoObjectId(input);
+		return await this.memberService.getMember(memberId, targetId);
 	}
 
 	// ADMIN QUERIES
@@ -102,10 +112,81 @@ export class MemberResolver {
 	@Roles(MemberType.ADMIN)
 	@UseGuards(RolesGuard)
 	@Mutation(() => Member)
-	public async updateMemberByAdmin(
-		@Args('input') input: MemberUpdate,
-	): Promise<Member> {
+	public async updateMemberByAdmin(@Args('input') input: MemberUpdate): Promise<Member> {
 		console.log('UpdateMemberByAdmin mutation called');
 		return this.memberService.updateMemberByAdmin(input);
+	}
+
+	@UseGuards(AuthGuard)
+	@Mutation((returns) => String)
+	public async imageUploader(
+		@Args({ name: 'file', type: () => GraphQLUpload })
+		{ createReadStream, filename, mimetype }: FileUpload,
+		@Args('target') target: String,
+	): Promise<string> {
+		console.log('Mutation: imageUploader');
+
+		if (!filename) throw new Error(Message.UPLOAD_FAILED);
+		const validMime = validMimeTypes.includes(mimetype);
+		if (!validMime) throw new Error(Message.PROVIDE_ALLOWED_FORMAT);
+
+		const imageName = getSerialForImage(filename);
+		const url = `uploads/${target}/${imageName}`;
+		const stream = createReadStream();
+
+		// Ensure directory exists
+		await mkdir(`uploads/${target}`, { recursive: true });
+
+		const result = await new Promise((resolve, reject) => {
+			stream
+				.pipe(createWriteStream(url))
+				.on('finish', async () => resolve(true))
+				.on('error', (err) => reject(new Error(Message.UPLOAD_FAILED)));
+		});
+		if (!result) throw new Error(Message.UPLOAD_FAILED);
+
+		return url;
+	}
+
+	@UseGuards(AuthGuard)
+	@Mutation((returns) => [String])
+	public async imagesUploader(
+		@Args('files', { type: () => [GraphQLUpload] })
+		files: Promise<FileUpload>[],
+		@Args('target') target: String,
+	): Promise<string[]> {
+		console.log('Mutation: imagesUploader');
+
+		const uploadedImages: any[] = [];
+		const promisedList = files.map(async (img: Promise<FileUpload>, index: number): Promise<Promise<void>> => {
+			try {
+				const { filename, mimetype, encoding, createReadStream } = await img;
+
+				const validMime = validMimeTypes.includes(mimetype);
+				if (!validMime) throw new Error(Message.PROVIDE_ALLOWED_FORMAT);
+
+				const imageName = getSerialForImage(filename);
+				const url = `uploads/${target}/${imageName}`;
+				const stream = createReadStream();
+
+				// Ensure directory exists
+				await mkdir(`uploads/${target}`, { recursive: true });
+
+				const result = await new Promise((resolve, reject) => {
+					stream
+						.pipe(createWriteStream(url))
+						.on('finish', () => resolve(true))
+						.on('error', (err) => reject(new Error(Message.UPLOAD_FAILED)));
+				});
+				if (!result) throw new Error(Message.UPLOAD_FAILED);
+
+				uploadedImages[index] = url;
+			} catch (err) {
+				console.log('Error, file missing:', err);
+			}
+		});
+
+		await Promise.all(promisedList);
+		return uploadedImages;
 	}
 }

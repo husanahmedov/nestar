@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
 import { Member, Members } from '../../libs/dto/member/member';
@@ -11,13 +11,23 @@ import { T } from '../../libs/types/common';
 import { ViewService } from '../view/view.service';
 import { ViewInput } from '../../libs/dto/view/view.input';
 import { ViewGroup } from '../../libs/enums/view.enum';
+import { StatisticModifier } from '../../libs/types/common';
+import { LikeInput } from '../../libs/dto/like/like.input';
+import { LikeGroup } from '../../libs/enums/like.enum';
+import { LikeService } from '../like/like.service';
+import { Follower, Following, MeFollowed } from '../../libs/dto/follow/follow';
+import { lookupAuthMemberLiked } from '../../libs/config';
+
+import { ObjectId as BsonObjectId } from 'bson';
 
 @Injectable()
 export class MemberService {
 	constructor(
 		@InjectModel('Member') private readonly memberModel: Model<Member>,
+		@InjectModel('Follow') private readonly followModel: Model<Following | Follower>,
 		private readonly authService: AuthService,
 		private readonly viewService: ViewService,
+		private readonly likeService: LikeService,
 	) {}
 	// Business logic for member operations would go here
 	public async signUp(input: MemberInput): Promise<Member> {
@@ -76,7 +86,7 @@ export class MemberService {
 		return result;
 	}
 
-	public async getMember(memberId: ObjectId, targetId: ObjectId): Promise<Member> {
+	public async getMember(memberId: ObjectId | null, targetId: ObjectId): Promise<Member> {
 		const search: T = {
 			_id: targetId,
 			memberStatus: {
@@ -100,11 +110,24 @@ export class MemberService {
 				targetMember.memberViews++;
 			}
 		}
+
+		const likeInput = {
+			memberId: memberId!,
+			likeRefId: targetId,
+			likeGroup: LikeGroup.MEMBER,
+		};
+		targetMember.meLiked = await this.likeService.checkLikeExistence(likeInput);
+		targetMember.meFollowed = await this.checkSubscription(memberId!, targetId);
 		return targetMember;
 	}
 
-	public async getAgents(memberId: ObjectId, input: AgentsInquiry): Promise<Members> {
-		const { text } = input.search;
+	private async checkSubscription(followerId: ObjectId, followingId: ObjectId): Promise<MeFollowed[]> {
+		const result = await this.followModel.findOne({ followingId: followingId, followerId: followerId }).exec();
+		return result ? [{ followerId: followerId, followingId: followingId, myFollowing: true }] : [];
+	}
+
+	public async getAgents(memberId: ObjectId | BsonObjectId, input: AgentsInquiry): Promise<Members> {
+		const { text } = input.search ?? {};
 		const match: T = { memberType: MemberType.AGENT, memberStatus: MemberStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
 		if (text) match.memberNick = { $regex: new RegExp(text, 'i') };
@@ -115,7 +138,11 @@ export class MemberService {
 				{ $sort: sort },
 				{
 					$facet: {
-						list: [{ $skip: ((input.page ?? 1) - 1) * (input.limit ?? 10) }, { $limit: input.limit ?? 10 }],
+						list: [
+							{ $skip: ((input.page ?? 1) - 1) * (input.limit ?? 10) },
+							{ $limit: input.limit ?? 10 },
+							lookupAuthMemberLiked(memberId as BsonObjectId),
+						],
 						metaCounter: [{ $count: 'total' }],
 					},
 				},
@@ -126,6 +153,32 @@ export class MemberService {
 			throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 		}
 		return result[0];
+	}
+
+	public async likeTargetMember(memberId: ObjectId, likeRefId: ObjectId): Promise<Member> {
+		const target: Member | null = await this.memberModel
+			.findOne({ _id: likeRefId, memberStatus: MemberStatus.ACTIVE })
+			.exec();
+		if (!target) {
+			throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+		}
+		const input: LikeInput = {
+			memberId: memberId,
+			likeRefId: likeRefId,
+			likeGroup: LikeGroup.MEMBER,
+		};
+
+		const modifier: number = await this.likeService.toggleLike(input);
+
+		const result = await this.memberStatsEditor({
+			_id: likeRefId,
+			targetKey: 'memberLikes',
+			modifier: modifier,
+		});
+		if (!result) {
+			throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+		}
+		return result;
 	}
 
 	public async getAllMembersByAdmin(input: MembersInquiry): Promise<Members> {
@@ -169,5 +222,17 @@ export class MemberService {
 			throw new InternalServerErrorException(Message.UPDATE_FAILED);
 		}
 		return result;
+	}
+
+	public async memberStatsEditor(input: StatisticModifier): Promise<Member> {
+		try {
+			const { _id, targetKey, modifier } = input;
+			return (await this.memberModel
+				.findOneAndUpdate({ _id }, { $inc: { [targetKey]: modifier } }, { new: true })
+				.exec()) as Member;
+		} catch (error) {
+			console.error('Error in memberStatsEditor service:', error);
+			throw new BadRequestException(error);
+		}
 	}
 }
