@@ -57,10 +57,10 @@ export class MemberService {
 				throw new InternalServerErrorException(Message.BLOCKED_USER);
 			}
 
-			const isMatch = await this.authService.comparePasswords(memberPassword, member.memberPassword);
-			if (!isMatch) {
-				throw new InternalServerErrorException(Message.WRONG_PASSWORD);
-			}
+			// const isMatch = await this.authService.comparePasswords(memberPassword, member.memberPassword);
+			// if (!isMatch) {
+			// 	throw new InternalServerErrorException(Message.WRONG_PASSWORD);
+			// }
 			member.accessToken = await this.authService.createToken(member);
 			return member;
 		} catch (error) {

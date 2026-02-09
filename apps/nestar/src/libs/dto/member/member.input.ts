@@ -1,6 +1,6 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { IsIn, IsNotEmpty, IsOptional, IsString, Length, Min } from 'class-validator';
-import { MemberStatus, MemberType } from '../../enums/member.enum';
+import { MemberAuthType, MemberStatus, MemberType } from '../../enums/member.enum';
 import { availableAgentSorts, availableMemberSorts } from '../../config';
 import { Direction } from '../../enums/common.enum';
 
@@ -27,7 +27,54 @@ export class MemberInput {
 	@IsOptional()
 	@Field(() => String, { nullable: true })
 	memberStatus?: string;
+
+	@IsOptional()
+	@Field(() => MemberAuthType, { nullable: true })
+	memberAuthType?: MemberAuthType;
+
+	@Field(() => String, { nullable: true })
+	memberImage?: string;
+
+	@Field(() => String, { nullable: true })
+	memberAddress?: string;
+
+	@Field(() => Int)
+	memberProperties: number;
+
+	@Field(() => Int)
+	memberArticles: number;
+
+	@Field(() => Int)
+	memberFollowers?: number;
+
+	@Field(() => Int)
+	memberFollowings?: number;
+
+	@Field(() => Int)
+	memberPoints: number;
+
+	@Field(() => Int)
+	memberLikes: number;
+
+	@Field(() => Int)
+	memberViews: number;
+
+	@Field(() => Int)
+	memberComments: number;
+
+	@Field(() => Int)
+	memberRank: number;
+
+	@Field(() => Int)
+	memberWarnings: number;
+
+	@Field(() => Int)
+	memberBlocks: number;
+
+	@Field(() => String, { nullable: true })
+	memberFullName?: string;
 }
+
 
 @InputType()
 export class LoginInput {

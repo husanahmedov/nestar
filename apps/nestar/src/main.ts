@@ -11,6 +11,7 @@ async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 	app.useGlobalPipes(new ValidationPipe()); // Enable global validation pipe
 	app.useGlobalInterceptors(new LoggingInterceptor()); // Enable global logging interceptor
+	app.enableCors({ origin: true, credentials: true }); // Enable CORS
 	app.use(graphqlUploadExpress({ maxFileSize: 15000000, maxFiles: 10 })); // Configure file upload
 	app.use('/uploads', express.static('./uploads')); // Serve static files from uploads directory
 	app.useWebSocketAdapter(new WsAdapter(app)); // Enable WebSocket support
