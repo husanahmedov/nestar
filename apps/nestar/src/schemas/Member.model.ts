@@ -16,7 +16,7 @@ const memberSchema = new Schema(
 		memberProperties: { type: Number, required: false, default: 0 },
 		memberArticles: { type: Number, required: false, default: 0 },
 		memberFollowers: { type: Number, required: false, default: 0 },
-		memberFollowing: { type: Number, required: false, default: 0 },
+		memberFollowings: { type: Number, required: false, default: 0 },
 		memberPoints: { type: Number, required: false, default: 0 },
 		memberLikes: { type: Number, required: false, default: 0 },
 		memberViews: { type: Number, required: false, default: 0 },

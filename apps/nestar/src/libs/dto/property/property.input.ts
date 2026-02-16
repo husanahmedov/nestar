@@ -158,6 +158,10 @@ class PISearch {
 	@IsOptional()
 	@Field(() => String, { nullable: true })
 	text?: string;
+
+	@IsOptional()
+	@Field(() => PropertyStatus, { nullable: true })
+	propertyStatus?: PropertyStatus;
 }
 
 @InputType()
