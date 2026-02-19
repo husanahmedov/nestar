@@ -256,7 +256,7 @@ export class PropertyService {
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
 
 		if (propertyStatus) match.propertyStatus = propertyStatus;
-		if (propertyLocationList) match.propertyLocation = { $in: propertyLocationList };
+		if (propertyLocationList && propertyLocationList.length) match.propertyLocation = { $in: propertyLocationList };
 
 		const result = await this.propertyModel
 			.aggregate([
@@ -266,7 +266,8 @@ export class PropertyService {
 					$facet: {
 						list: [
 							{ $skip: (input.page - 1) * input.limit },
-							{ $limit: input.limit }, // lookupMember,
+							{ $limit: input.limit },
+							lookupMember,
 							{ $unwind: '$memberData' },
 						],
 						metaCounter: [{ $count: 'total' }],
@@ -274,6 +275,8 @@ export class PropertyService {
 				},
 			])
 			.exec();
+		console.log(result);
+
 		if (!result.length) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		return result[0];
