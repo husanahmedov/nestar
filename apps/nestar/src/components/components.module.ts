@@ -19,5 +19,6 @@ import { BoardArticleModule } from './board-article/board-article.module';
 		FollowModule,
 		BoardArticleModule,
 	],
+	exports: [AuthModule],
 })
 export class ComponentsModule {}

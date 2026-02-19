@@ -22,7 +22,7 @@ import { SocketModule } from './socket/socket.module';
 			formatError: (error: T) => {
 				const graphQLFormattedError = {
 					code: error.extensions?.code,
-					message: error
+					message: error,
 				};
 				return graphQLFormattedError;
 			},
