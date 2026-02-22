@@ -7,6 +7,7 @@ import { LikeModule } from './like/like.module';
 import { ViewModule } from './view/view.module';
 import { FollowModule } from './follow/follow.module';
 import { BoardArticleModule } from './board-article/board-article.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
 	imports: [
@@ -18,6 +19,7 @@ import { BoardArticleModule } from './board-article/board-article.module';
 		ViewModule,
 		FollowModule,
 		BoardArticleModule,
+		MessageModule,
 	],
 	exports: [AuthModule],
 })

@@ -61,6 +61,7 @@ export class SocketGateway implements OnGatewayInit {
 			action: 'joined',
 		};
 		this.emitMessage(infoMsg);
+		client.send(JSON.stringify({ event: 'getMessage', list: this.messagesList }));
 	}
 
 	public handleDisconnect(client: WebSocket) {
@@ -99,6 +100,7 @@ export class SocketGateway implements OnGatewayInit {
 		const clientNick: string = authMember?.memberNick ?? 'Guest';
 		this.logger.verbose(`Received message: ${payload} from client ${clientNick}`);
 		this.messagesList.push(newMessage);
+		if (this.messagesList.length > 5) this.messagesList.splice(0, this.messagesList.length - 5);
 		this.emitMessage(newMessage);
 	}
 
